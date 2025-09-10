@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    " I ",
+    "BGB",
+    " D "
+  ],
+  "key": {
+    "B": "minecraft:iron_bars",
+    "G": "minecraft:end_rod",
+    "I": "minecraft:iron_ingot",
+    "D": "minecraft:purple_dye"
+  },
+  "result": {
+    "id": "bat_zapper:bat_zapper",
+    "count": 1
+  }
+}

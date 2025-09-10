@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "bat_zapper:block/bat_zapper" }
+  }
+}
