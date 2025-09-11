@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.InsideBlockEffectApplier;
 import net.minecraft.world.entity.ambient.Bat;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -40,7 +41,7 @@ public class BatZapperBlock extends Block
     {
         return true;
     }
-    
+
 
     @Override
     public float getShadeBrightness(BlockState state, BlockGetter world, BlockPos pos) {
@@ -69,9 +70,13 @@ public class BatZapperBlock extends Block
 
 
     @Override
-    protected void entityInside(BlockState blockState, Level level, BlockPos blockPos, Entity entity)
+    protected void entityInside(BlockState blockState,
+        Level level,
+        BlockPos blockPos,
+        Entity entity,
+        InsideBlockEffectApplier insideBlockEffectApplier)
     {
-        super.entityInside(blockState, level, blockPos, entity);
+        super.entityInside(blockState, level, blockPos, entity, insideBlockEffectApplier);
 
         if (level instanceof ServerLevel serverLevel && entity instanceof Bat)
         {
