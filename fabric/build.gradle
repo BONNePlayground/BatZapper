@@ -61,6 +61,7 @@ curseforge {
         changelogType = "text"
         releaseType = "release"
         addGameVersion "1.21"
+        addGameVersion "1.21.1"
         addGameVersion "Fabric"
         addGameVersion "Java 21"
 
