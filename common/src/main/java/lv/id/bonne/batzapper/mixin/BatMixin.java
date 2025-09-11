@@ -16,6 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import lv.id.bonne.batzapper.registries.BatZapperBlockRegistry;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
@@ -38,7 +39,7 @@ public abstract class BatMixin
 
 
     @Shadow
-    public abstract boolean hurt(DamageSource damageSource, float f);
+    public abstract boolean hurtServer(ServerLevel serverLevel, DamageSource damageSource, float f);
 
 
     /**
@@ -72,14 +73,14 @@ public abstract class BatMixin
      * This method injects custom AI logic for bats that tries to fly towards bat zapper.
      */
     @Inject(method = "customServerAiStep", at = @At(value = "INVOKE",
-        target = "Lnet/minecraft/world/entity/ambient/AmbientCreature;customServerAiStep()V",
+        target = "Lnet/minecraft/world/entity/ambient/AmbientCreature;customServerAiStep(Lnet/minecraft/server/level/ServerLevel;)V",
         shift = At.Shift.AFTER),
         cancellable = true)
-    private void injectCustomAIStep(CallbackInfo ci)
+    private void injectCustomAIStep(ServerLevel serverLevel, CallbackInfo ci)
     {
         Bat bat = (Bat) (Object) this;
 
-        Player nearestPlayer = bat.level().getNearestPlayer(BAT_ZAPPER_TARGETING, bat);
+        Player nearestPlayer = serverLevel.getNearestPlayer(BAT_ZAPPER_TARGETING, bat);
         BlockPos targetPosition = this.batZapper$targetPosition;
 
         if (nearestPlayer != null)
@@ -102,7 +103,7 @@ public abstract class BatMixin
             if (!bat.isSilent())
             {
                 // Trigger sound.
-                bat.level().levelEvent(null, 1025, bat.blockPosition(), 0);
+                serverLevel.levelEvent(null, 1025, bat.blockPosition(), 0);
             }
         }
 
@@ -126,7 +127,7 @@ public abstract class BatMixin
 
         if (nearestPlayer != null && nearestPlayer.distanceTo(bat) < 1)
         {
-            this.hurt(bat.damageSources().magic(), 3f);
+            this.hurtServer(serverLevel, bat.damageSources().magic(), 3f);
         }
 
         // Prevent to execute vanilla code.
@@ -181,7 +182,7 @@ public abstract class BatMixin
      */
     @Unique
     private final static TargetingConditions BAT_ZAPPER_TARGETING = TargetingConditions.forNonCombat().range(12).selector(
-        (livingEntity) -> {
+        (livingEntity, serverLevel) -> {
             if (!(livingEntity instanceof ServerPlayer player))
             {
                 return false;

@@ -36,15 +36,11 @@ public class BatZapperBlock extends Block
 
 
     @Override
-    protected boolean propagatesSkylightDown(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos)
+    protected boolean propagatesSkylightDown(BlockState blockState)
     {
         return true;
     }
-
-    @Override
-    public VoxelShape getVisualShape(BlockState state, BlockGetter reader, BlockPos pos, CollisionContext context) {
-        return Shapes.empty();
-    }
+    
 
     @Override
     public float getShadeBrightness(BlockState state, BlockGetter world, BlockPos pos) {
