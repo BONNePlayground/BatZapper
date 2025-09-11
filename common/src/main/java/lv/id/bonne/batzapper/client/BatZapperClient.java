@@ -9,13 +9,13 @@ package lv.id.bonne.batzapper.client;
 
 import dev.architectury.registry.client.rendering.RenderTypeRegistry;
 import lv.id.bonne.batzapper.registries.BatZapperBlockRegistry;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 
 
 public class BatZapperClient
 {
     public static void init()
     {
-        RenderTypeRegistry.register(RenderType.translucent(), BatZapperBlockRegistry.BAT_ZAPPER.get());
+        RenderTypeRegistry.register(ChunkSectionLayer.TRANSLUCENT, BatZapperBlockRegistry.BAT_ZAPPER.get());
     }
 }
