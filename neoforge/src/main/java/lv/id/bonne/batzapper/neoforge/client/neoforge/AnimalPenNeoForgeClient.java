@@ -10,7 +10,7 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 
 
-@EventBusSubscriber(modid = BatZapper.MOD_ID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = BatZapper.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class AnimalPenNeoForgeClient
 {
     @SubscribeEvent
