@@ -7,7 +7,6 @@ import org.jetbrains.annotations.NotNull;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.InsideBlockEffectApplier;
 import net.minecraft.world.entity.ambient.Bat;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -37,7 +36,7 @@ public class BatZapperBlock extends Block
 
 
     @Override
-    protected boolean propagatesSkylightDown(BlockState blockState)
+    protected boolean propagatesSkylightDown(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos)
     {
         return true;
     }
@@ -74,17 +73,13 @@ public class BatZapperBlock extends Block
 
 
     @Override
-    protected void entityInside(BlockState blockState,
-        Level level,
-        BlockPos blockPos,
-        Entity entity,
-        InsideBlockEffectApplier insideBlockEffectApplier)
+    protected void entityInside(BlockState blockState, Level level, BlockPos blockPos, Entity entity)
     {
-        super.entityInside(blockState, level, blockPos, entity, insideBlockEffectApplier);
+        super.entityInside(blockState, level, blockPos, entity);
 
         if (level instanceof ServerLevel serverLevel && entity instanceof Bat)
         {
-            entity.hurtServer(serverLevel, serverLevel.damageSources().magic(), 3f);
+            entity.hurt(serverLevel.damageSources().magic(), 3f);
         }
     }
 

@@ -6,7 +6,7 @@
     ]
   },
   "criteria": {
-    "has_crafting_table": {
+    "has_crafting_items": {
       "trigger": "minecraft:inventory_changed",
       "conditions": {
         "items": [
@@ -14,29 +14,20 @@
             "items": [
               "minecraft:crafting_table"
             ]
-          }
-        ]
-      }
-    },
-    "has_end_rod": {
-      "trigger": "minecraft:inventory_changed",
-      "conditions": {
-        "items": [
+          },
+          {
+            "items": [
+              "minecraft:iron_ingot"
+            ]
+          },
           {
             "items": [
               "minecraft:end_rod"
             ]
-          }
-        ]
-      }
-    },
-    "has_iron_bars": {
-      "trigger": "minecraft:inventory_changed",
-      "conditions": {
-        "items": [
+          },
           {
             "items": [
-              "minecraft:iron_bars"
+              "minecraft:purple_dye"
             ]
           }
         ]
@@ -51,9 +42,7 @@
   },
   "requirements": [
     [
-      "has_crafting_table",
-      "has_end_rod",
-      "has_iron_bars",
+      "has_crafting_items",
       "has_the_recipe"
     ]
   ]

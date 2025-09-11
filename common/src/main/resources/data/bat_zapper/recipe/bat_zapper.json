@@ -7,10 +7,18 @@
     " D "
   ],
   "key": {
-    "B": "minecraft:iron_bars",
-    "G": "minecraft:end_rod",
-    "I": "minecraft:iron_ingot",
-    "D": "minecraft:purple_dye"
+    "B": {
+      "item": "minecraft:iron_bars"
+    },
+    "G": {
+      "item": "minecraft:end_rod"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "D": {
+      "item": "minecraft:purple_dye"
+    }
   },
   "result": {
     "id": "bat_zapper:bat_zapper",
