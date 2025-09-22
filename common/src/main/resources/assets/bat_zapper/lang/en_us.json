@@ -1,5 +1,7 @@
 {
   "block.bat_zapper.bat_zapper": "Bat Zapper",
   "item.bat_zapper.bat_zapper": "Bat Zapper",
+  "block.bat_zapper.bat_lure": "Bat Lure",
+  "item.bat_zapper.bat_lure": "Bat Lure",
   "category.bat_zapper.bat_zapper": "Bat Zapper Items"
 }
