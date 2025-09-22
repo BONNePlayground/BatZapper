@@ -5,23 +5,18 @@ import com.mojang.serialization.MapCodec;
 import org.jetbrains.annotations.NotNull;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleOptions;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.particles.ShriekParticleOption;
 import net.minecraft.core.particles.VibrationParticleOption;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.ambient.Bat;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.BlockPositionSource;
-import net.minecraft.world.level.gameevent.PositionSource;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -48,15 +43,11 @@ public class BatLureBlock extends Block
 
 
     @Override
-    protected boolean propagatesSkylightDown(BlockState blockState, BlockGetter blockGetter, BlockPos blockPos)
+    protected boolean propagatesSkylightDown(BlockState blockState)
     {
         return true;
     }
 
-    @Override
-    public VoxelShape getVisualShape(BlockState state, BlockGetter reader, BlockPos pos, CollisionContext context) {
-        return Shapes.empty();
-    }
 
     @Override
     public float getShadeBrightness(BlockState state, BlockGetter world, BlockPos pos) {
@@ -168,7 +159,7 @@ public class BatLureBlock extends Block
         EntityType.BAT.create(serverLevel,
             serverLevel::addFreshEntity,
             pos,
-            MobSpawnType.MOB_SUMMONED,
+            EntitySpawnReason.MOB_SUMMONED,
             true,
             false);
     }
