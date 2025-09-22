@@ -75,6 +75,8 @@ public class BatZapperBlockRegistry
                 sound(SoundType.WOOD).
                 noOcclusion().
                 randomTicks().
-                lightLevel(state -> 1))
+                lightLevel(state -> 1).
+                setId(ResourceKey.create(Registries.BLOCK,
+                    ResourceLocation.fromNamespaceAndPath(BatZapper.MOD_ID, "bat_zapper"))))
     );
 }
