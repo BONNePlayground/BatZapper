@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "   ",
+    " N ",
+    " o "
+  ],
+  "key": {
+    "o": "minecraft:dark_oak_planks",
+    "N": "minecraft:note_block"
+  },
+  "result": {
+    "id": "bat_zapper:bat_lure",
+    "count": 1
+  }
+}
