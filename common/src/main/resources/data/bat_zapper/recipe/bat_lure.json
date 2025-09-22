@@ -7,12 +7,8 @@
     " o "
   ],
   "key": {
-    "o": {
-      "item": "minecraft:dark_oak_planks"
-    },
-    "N": {
-      "item": "minecraft:note_block"
-    }
+    "o": "minecraft:dark_oak_planks",
+    "N": "minecraft:note_block"
   },
   "result": {
     "id": "bat_zapper:bat_lure",
