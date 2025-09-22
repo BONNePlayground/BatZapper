@@ -1,0 +1,44 @@
+{
+  "parent": "minecraft:recipes/root",
+  "rewards": {
+    "recipes": [
+      "bat_zapper:bat_lure"
+    ]
+  },
+  "criteria": {
+    "has_crafting_items": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "minecraft:crafting_table"
+            ]
+          },
+          {
+            "items": [
+              "minecraft:dark_oak_log"
+            ]
+          },
+          {
+            "items": [
+              "minecraft:note_block"
+            ]
+          }
+        ]
+      }
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "bat_zapper:bat_lure"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_crafting_items",
+      "has_the_recipe"
+    ]
+  ]
+}

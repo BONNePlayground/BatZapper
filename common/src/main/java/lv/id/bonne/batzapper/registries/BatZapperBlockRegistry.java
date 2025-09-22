@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 import dev.architectury.registry.registries.DeferredRegister;
 import dev.architectury.registry.registries.RegistrySupplier;
 import lv.id.bonne.batzapper.BatZapper;
+import lv.id.bonne.batzapper.blocks.BatLureBlock;
 import lv.id.bonne.batzapper.blocks.BatZapperBlock;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -64,5 +65,16 @@ public class BatZapperBlockRegistry
                 lightLevel(state -> 3).
                 setId(ResourceKey.create(Registries.BLOCK,
                     ResourceLocation.fromNamespaceAndPath(BatZapper.MOD_ID, "bat_zapper"))))
+    );
+
+
+    public static final RegistrySupplier<Block> BAT_LURE = registerBlock("bat_lure",
+        () -> new BatLureBlock(
+            BlockBehaviour.Properties.ofFullCopy(Blocks.NOTE_BLOCK).
+                strength(1.0f).
+                sound(SoundType.WOOD).
+                noOcclusion().
+                randomTicks().
+                lightLevel(state -> 1))
     );
 }
