@@ -71,12 +71,12 @@ public class Configuration
 
         if (this.zapperOperationRange == null || init)
         {
-            this.zapperOperationRange = 32;
+            this.zapperOperationRange = 20;
         }
 
         if (this.playerSearchRange == null || init)
         {
-            this.playerSearchRange = 16;
+            this.playerSearchRange = 12;
         }
     }
 
@@ -174,10 +174,10 @@ public class Configuration
     private Integer lureSummonsPerTry = 1;
 
     @JsonComment("Allows to change in how large area zapper operates.")
-    @JsonComment("Default = 16.")
+    @JsonComment("Default = 20.")
     @Expose
     @SerializedName("zapper_operation_range")
-    private Integer zapperOperationRange = 16;
+    private Integer zapperOperationRange = 20;
 
     @JsonComment("Allows to change in how large area bats searches for player with bat zapper in hand.")
     @JsonComment("Default = 12.")
