@@ -4,6 +4,7 @@ package lv.id.bonne.batzapper.blocks;
 import com.mojang.serialization.MapCodec;
 import org.jetbrains.annotations.NotNull;
 
+import lv.id.bonne.batzapper.BatZapper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ShriekParticleOption;
 import net.minecraft.core.particles.VibrationParticleOption;
@@ -99,56 +100,55 @@ public class BatLureBlock extends Block
                 0.001);
         }
 
-        if (randomSource.nextInt(3) == 0)
+        if (randomSource.nextFloat() < BatZapper.config().getLureToSummonChance())
         {
-            // Make it 4 times less often
             return;
         }
+
+        int range = BatZapper.config().getLureOperationRange();
 
         // Find bats in 32 blocks on each side of lure
         int numberOfBats = serverLevel.getNearbyEntities(Bat.class,
                 BATS_IN_RANGE,
                 null,
-                AABB.ofSize(blockPos.getCenter(), 64, 64, 64)).
+                AABB.ofSize(blockPos.getCenter(), range * 2, range * 2, range * 2)).
             size();
 
-        if (numberOfBats > 7)
+        if (numberOfBats >= BatZapper.config().getLureBatLimit())
         {
             // I think 7 bats are enough. Isn't it? Well, now it is.
             return;
         }
 
-        BlockPos pos = null;
+        int summonedBats = BatZapper.config().getLureSummonsPerTry();
 
         // Try to find air block in 50 tries
-        for (int tries = 0; tries < 50; tries++)
+        for (int tries = 0; tries < 50 * BatZapper.config().getLureSummonsPerTry() && summonedBats > 0; tries++)
         {
-            int dx = randomSource.nextInt(32);
-            int dy = randomSource.nextInt(32);
-            int dz = randomSource.nextInt(32);
+            int dx = randomSource.nextInt(range);
+            int dy = randomSource.nextInt(range);
+            int dz = randomSource.nextInt(range);
 
             BlockPos checkPos = blockPos.offset(dx, dy, dz);
 
             if (serverLevel.getBlockState(checkPos).isAir())
             {
-                pos = checkPos;
-                break;
+                this.summonBat(checkPos, blockPos, serverLevel);
+                summonedBats--;
             }
         }
+    }
 
-        if (pos == null)
-        {
-            // Hmm, 50 random position checks and no air? Very unlucky
-            return;
-        }
 
+    private void summonBat(BlockPos batPos, BlockPos blockPos, ServerLevel serverLevel)
+    {
         VibrationParticleOption vibration = new VibrationParticleOption(
             new BlockPositionSource(blockPos), 40);
 
         serverLevel.sendParticles(vibration,
-            pos.getCenter().x(),
-            pos.getCenter().y(),
-            pos.getCenter().z(),
+            batPos.getCenter().x(),
+            batPos.getCenter().y(),
+            batPos.getCenter().z(),
             1,
             0,
             0,
@@ -158,7 +158,7 @@ public class BatLureBlock extends Block
         // Now create the nasty bat
         EntityType.BAT.create(serverLevel,
             serverLevel::addFreshEntity,
-            pos,
+            batPos,
             EntitySpawnReason.MOB_SUMMONED,
             true,
             false);
