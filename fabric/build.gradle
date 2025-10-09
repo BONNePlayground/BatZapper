@@ -8,6 +8,15 @@ architectury {
     fabric()
 }
 
+loom {
+    runs {
+        client {
+            client()
+            programArg("--username=Dev")
+        }
+    }
+}
+
 configurations {
     common {
         canBeResolved = true
