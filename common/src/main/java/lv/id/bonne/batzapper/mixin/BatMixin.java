@@ -7,12 +7,15 @@
 package lv.id.bonne.batzapper.mixin;
 
 
+import org.jetbrains.annotations.NotNull;
+import org.spongepowered.asm.mixin.Intrinsic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import java.util.Set;
 
 import lv.id.bonne.batzapper.BatZapper;
 import lv.id.bonne.batzapper.registries.BatZapperBlockRegistry;
@@ -20,16 +23,30 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.ambient.Bat;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.LevelEvent;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.phys.Vec3;
 
 
 @Mixin(Bat.class)
-public abstract class BatMixin
+public abstract class BatMixin extends Mob
 {
+    protected BatMixin(EntityType<? extends Bat> entityType, Level level)
+    {
+        super(entityType, level);
+    }
+
+
     @Shadow
     public abstract boolean isResting();
 
@@ -39,148 +56,246 @@ public abstract class BatMixin
 
 
     @Shadow
-    public abstract boolean hurt(DamageSource damageSource, float f);
+    public abstract boolean hurt(DamageSource source, float amount);
 
 
     /**
-     * This code injects bat zapper block finder in the world.
-     * @param ci
+     * Periodically searches for the nearest bat zapper block and sets it as a navigation target.
      */
     @Inject(method = "tick", at = @At("HEAD"))
-    private void injectTargetFinder(CallbackInfo ci)
+    private void batZapper$injectTargetFinder(CallbackInfo ci)
     {
         Bat bat = (Bat) (Object) this;
 
-        if (bat.level().isClientSide) return;
-
-        // Only process every few ticks for performance
-        if (bat.tickCount % 10 != 0) return;
-
-        if (this.batZapper$targetPosition != null &&
-            bat.level().getBlockState(this.batZapper$targetPosition).
-                is(BatZapperBlockRegistry.BAT_ZAPPER))
+        if (bat.level().isClientSide)
         {
-            // If bat already found block, fly to it. Do not search blocks again.
+            return; // Only run server-side
+        }
+
+        if (bat.tickCount % 100 != 0)
+        {
+            return; // Run every 100 ticks for performance
+        }
+
+        // Skip if bat is already navigating
+        PathNavigation nav = this.getNavigation();
+        if (nav.isInProgress() && !nav.isStuck())
+        {
             return;
         }
 
-        // Find the closest block cage.
-        this.batZapper$targetPosition = this.batZapper$findNearestCage(bat);
+        // Find and assign nearest zapper
+        this.batZapper$findNearestZapper(bat.level());
     }
 
 
     /**
-     * This method injects custom AI logic for bats that tries to fly towards bat zapper.
+     * Custom AI behavior: makes bats fly toward either nearby players holding zappers or the nearest zapper block.
      */
-    @Inject(method = "customServerAiStep", at = @At(value = "INVOKE",
-        target = "Lnet/minecraft/world/entity/ambient/AmbientCreature;customServerAiStep()V",
-        shift = At.Shift.AFTER),
-        cancellable = true)
-    private void injectCustomAIStep(CallbackInfo ci)
+    @Inject(
+        method = "customServerAiStep",
+        at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/world/entity/ambient/AmbientCreature;customServerAiStep()V",
+            shift = At.Shift.AFTER),
+        cancellable = true
+    )
+    private void batZapper$customServerAI(CallbackInfo ci)
     {
         Bat bat = (Bat) (Object) this;
+        Level level = bat.level();
 
-        TargetingConditions targetingConditions =
-            TargetingConditions.forNonCombat().range(BatZapper.config().getPlayerSearchRange()).selector(
-                livingEntity ->
-                {
-                    if (!(livingEntity instanceof ServerPlayer player))
-                    {
-                        return false;
-                    }
+        // Find nearest player holding a zapper
+        TargetingConditions conditions = TargetingConditions.forNonCombat().
+            range(BatZapper.config().getPlayerSearchRange()).
+            selector(entity -> entity instanceof ServerPlayer player &&
+                player.hasLineOfSight(bat) &&
+                (
+                    player.getMainHandItem().is(BatZapperBlockRegistry.BAT_ZAPPER.get().asItem()) ||
+                        player.getOffhandItem().is(BatZapperBlockRegistry.BAT_ZAPPER.get().asItem()))
+            );
 
-                    return player.getMainHandItem().is(BatZapperBlockRegistry.BAT_ZAPPER.get().asItem()) ||
-                        player.getOffhandItem().is(BatZapperBlockRegistry.BAT_ZAPPER.get().asItem());
-                });
-
-        Player nearestPlayer = bat.level().getNearestPlayer(targetingConditions, bat);
-        BlockPos targetPosition = this.batZapper$targetPosition;
+        Player nearestPlayer = level.getNearestPlayer(conditions, bat);
 
         if (nearestPlayer != null)
         {
-            // fly to player
-            targetPosition = nearestPlayer.blockPosition();
+            // Stop navigation. Run to player
+            this.getNavigation().stop();
         }
 
-        if (targetPosition == null)
+        if (bat.horizontalCollision && !bat.verticalCollision)
         {
-            // Position is not found. Continue with vanilla behaviour.
+            // stuck against wall... move up
+            Vec3 vel = bat.getDeltaMovement().add(0, 0.15, 0);
+            bat.setDeltaMovement(vel);
+        }
+
+        if (this.getNavigation().isInProgress())
+        {
+            Path path = this.getNavigation().getPath();
+
+            if (path != null && !path.isDone())
+            {
+                Vec3 nextPos = path.getNextEntityPos(bat);
+
+                if (nextPos != null)
+                {
+                    double dy = nextPos.y - bat.getY();
+
+                    // Movement upwards, because the fall down
+                    if (dy > 0)
+                    {
+                        bat.addDeltaMovement(new Vec3(0, dy + 0.15, 0));
+                    }
+                }
+            }
+
+            ci.cancel();
             return;
         }
 
+        Vec3 target = (nearestPlayer != null) ? nearestPlayer.position() : this.batZapper$targetPosition;
+
+        if (target == null)
+        {
+            return; // Nothing to do
+        }
+
+        // Wake up bat if it's resting
         if (this.isResting())
         {
-            // Remove from resting
             this.setResting(false);
 
             if (!bat.isSilent())
             {
-                // Trigger sound.
-                bat.level().levelEvent(null, 1025, bat.blockPosition(), 0);
+                level.levelEvent(null, LevelEvent.SOUND_BAT_LIFTOFF, bat.blockPosition(), 0);
             }
         }
 
-        // Now calculate where to fly.
+        // Smooth movement toward target
+        Vec3 delta = target.subtract(bat.position());
+        Vec3 movement = bat.getDeltaMovement();
 
-        double deltaX = targetPosition.getX() + 0.5 - bat.getX();
-        double deltaY = targetPosition.getY() + 0.1 - bat.getY();
-        double deltaZ = targetPosition.getZ() + 0.5 - bat.getZ();
-        Vec3 initialMovement = bat.getDeltaMovement();
-
-        Vec3 newMovement = initialMovement.add((Math.signum(deltaX) * (double)0.5F - initialMovement.x) * (double)0.1F,
-            (Math.signum(deltaY) * (double)0.7F - initialMovement.y) * (double)0.1F,
-            (Math.signum(deltaZ) * (double)0.5F - initialMovement.z) * (double)0.1F);
+        Vec3 newMovement = movement.add(
+            (Math.signum(delta.x) * 0.5 - movement.x) * 0.1,
+            (Math.signum(delta.y + 0.1) * 0.7 - movement.y) * 0.1,
+            (Math.signum(delta.z) * 0.5 - movement.z) * 0.1
+        );
 
         bat.setDeltaMovement(newMovement);
 
-        float rotation = (float)(Mth.atan2(newMovement.z, newMovement.x) * (double)(180F / (float)Math.PI)) - 90.0F;
-        float bodyRotation = Mth.wrapDegrees(rotation - bat.getYRot());
+        // Rotate smoothly toward direction of motion
+        float yaw = (float) (Mth.atan2(newMovement.z, newMovement.x) * 180F / Math.PI) - 90F;
+        bat.setYRot(bat.getYRot() + Mth.wrapDegrees(yaw - bat.getYRot()));
         bat.zza = 0.5F;
-        bat.setYRot(bat.getYRot() + bodyRotation);
 
-        if (nearestPlayer != null && nearestPlayer.distanceTo(bat) < 1)
+        // Damage bat on contact
+        boolean closeToPlayer = nearestPlayer != null && nearestPlayer.distanceTo(bat) < 1;
+        boolean closeToTarget = this.batZapper$targetPosition != null &&
+            this.batZapper$targetPosition.distanceTo(bat.position()) < 1;
+
+        if (closeToPlayer || closeToTarget)
         {
             this.hurt(bat.damageSources().magic(), 3f);
         }
 
-        // Prevent to execute vanilla code.
-        ci.cancel();
+        ci.cancel(); // Cancel vanilla AI
     }
 
 
+    /**
+     * Searches for the closest bat zapper within configured range.
+     */
     @Unique
-    private BlockPos batZapper$findNearestCage(Bat bat)
+    private void batZapper$findNearestZapper(Level level)
     {
-        BlockPos batPos = bat.blockPosition();
+        Bat bat = (Bat) (Object) this;
+        BlockPos origin = bat.blockPosition();
         int range = BatZapper.config().getZapperOperationRange();
 
-        for (int r = 1; r <= range; r++)
+        BlockPos bestPos = null;
+        double bestDist = Double.MAX_VALUE;
+
+        for (BlockPos pos : BlockPos.betweenClosed(
+            origin.offset(-range, -range, -range),
+            origin.offset(range, range, range)))
         {
-            for (int x = -r; x <= r; x++)
+            if (level.isOutsideBuildHeight(pos))
             {
-                for (int y = -r; y <= r; y++)
-                {
-                    for (int z = -r; z <= r; z++)
-                    {
-                        if (Math.max(Math.abs(x), Math.max(Math.abs(y), Math.abs(z))) != r) continue;
+                continue;
+            }
 
-                        BlockPos checkPos = batPos.offset(x, y, z);
+            BlockState state = level.getBlockState(pos);
 
-                        if (bat.level().isOutsideBuildHeight(checkPos)) continue;
+            if (!state.is(BatZapperBlockRegistry.BAT_ZAPPER))
+            {
+                continue;
+            }
 
-                        BlockState blockState = bat.level().getBlockState(checkPos);
+            double distSq = origin.distSqr(pos);
 
-                        if (blockState.is(BatZapperBlockRegistry.BAT_ZAPPER))
-                        {
-                            return checkPos;
-                        }
-                    }
-                }
+            if (distSq < bestDist)
+            {
+                bestDist = distSq;
+                bestPos = pos.immutable();
             }
         }
 
-        // no zappers in range.
-        return null;
+        if (bestPos == null)
+        {
+            this.batZapper$targetPosition = null;
+            return;
+        }
+
+        double distance = bat.distanceToSqr(bestPos.getCenter());
+
+        if (distance < 64)
+        {
+            range = 0;
+        }
+        else if (distance < 144)
+        {
+            range = 4;
+        }
+        else if (distance < 400)
+        {
+            range = 10;
+        }
+
+        PathNavigation nav = this.getNavigation();
+        Path path = nav.createPath(Set.of(bestPos.west(), bestPos.east(), bestPos.north(), bestPos.south()), range);
+
+//        if (path != null)
+//        {
+//            Minecraft.getInstance().debugRenderer.pathfindingRenderer.addPath(bat.getId(), path, nav.getMaxDistanceToWaypoint());
+//        }
+
+        if (path != null && path.canReach())
+        {
+            nav.moveTo(path, 0.7);
+            this.batZapper$targetPosition = bestPos.getCenter();
+        }
+        else
+        {
+            nav.stop();
+            this.batZapper$targetPosition = null;
+        }
+    }
+
+
+    @Override
+    @NotNull
+    @Intrinsic(displace = false)
+    protected PathNavigation createNavigation(@NotNull Level level)
+    {
+        FlyingPathNavigation navigation = new FlyingPathNavigation(this, level)
+        {
+
+        };
+        navigation.setCanFloat(true);
+        navigation.setCanPassDoors(true);
+        navigation.canCutCorner(PathType.WALKABLE);
+        navigation.setMaxVisitedNodesMultiplier(0.1f);
+        return navigation;
     }
 
 
@@ -188,5 +303,5 @@ public abstract class BatMixin
      * The target position for bat zapper.
      */
     @Unique
-    private BlockPos batZapper$targetPosition = null;
+    private Vec3 batZapper$targetPosition = null;
 }
