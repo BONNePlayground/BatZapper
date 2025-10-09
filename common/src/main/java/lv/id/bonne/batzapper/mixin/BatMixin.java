@@ -296,7 +296,6 @@ public abstract class BatMixin extends Mob
 
         };
         navigation.setCanFloat(true);
-        navigation.setCanPassDoors(true);
         navigation.canCutCorner(PathType.WALKABLE);
         navigation.setMaxVisitedNodesMultiplier(0.1f);
         return navigation;
