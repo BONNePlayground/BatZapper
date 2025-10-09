@@ -3,3 +3,4 @@
 #### Features:
 - Added config file that allows to change mod options.
 - Added command that allows to reload and reset config.
+- Improve bat path-finding towards bat-zapper.
