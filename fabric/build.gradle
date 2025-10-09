@@ -69,9 +69,8 @@ curseforge {
         changelog = rootProject.file("CHANGELOG_LATEST.md").text
         changelogType = "text"
         releaseType = "release"
-        addGameVersion "1.21.6"
-        addGameVersion "1.21.7"
-        addGameVersion "1.21.8"
+        addGameVersion "1.21.9"
+        addGameVersion "1.21.10"
         addGameVersion "Fabric"
         addGameVersion "Java 21"
 
