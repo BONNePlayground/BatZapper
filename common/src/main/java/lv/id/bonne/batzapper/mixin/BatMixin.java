@@ -83,7 +83,7 @@ public abstract class BatMixin
 
         TargetingConditions targetingConditions =
             TargetingConditions.forNonCombat().range(BatZapper.config().getPlayerSearchRange()).selector(
-                livingEntity ->
+                (livingEntity, level) ->
                 {
                     if (!(livingEntity instanceof ServerPlayer player))
                     {
