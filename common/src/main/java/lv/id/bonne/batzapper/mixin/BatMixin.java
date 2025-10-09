@@ -52,7 +52,7 @@ public abstract class BatMixin
     {
         Bat bat = (Bat) (Object) this;
 
-        if (bat.level().isClientSide) return;
+        if (bat.level().isClientSide()) return;
 
         // Only process every few ticks for performance
         if (bat.tickCount % 10 != 0) return;
