@@ -107,15 +107,18 @@ public abstract class BatMixin extends Mob
 
         // Find nearest player holding a zapper
         TargetingConditions conditions =
-            TargetingConditions.forNonCombat().range(BatZapper.config().getPlayerSearchRange()).selector(
-                (entity, lev) -> entity instanceof ServerPlayer player &&
-                player.hasLineOfSight(bat) &&
-                (
-                    player.getMainHandItem().is(BatZapperBlockRegistry.BAT_ZAPPER.get().asItem()) ||
-                        player.getOffhandItem().is(BatZapperBlockRegistry.BAT_ZAPPER.get().asItem()))
-            );
+            TargetingConditions.forNonCombat().range(12).selector(
+                (livingEntity, pLevel) -> {
+                    if (!(livingEntity instanceof ServerPlayer player) || !player.hasLineOfSight(bat))
+                    {
+                        return false;
+                    }
 
-        Player nearestPlayer = level.getNearestPlayer(conditions, bat);
+                    return player.getMainHandItem().is(BatZapperBlockRegistry.BAT_ZAPPER.get().asItem()) ||
+                        player.getOffhandItem().is(BatZapperBlockRegistry.BAT_ZAPPER.get().asItem());
+                });
+
+        Player nearestPlayer = serverLevel.getNearestPlayer(conditions, bat);
 
         if (nearestPlayer != null)
         {
