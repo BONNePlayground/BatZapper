@@ -14,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import lv.id.bonne.batzapper.BatZapper;
 import lv.id.bonne.batzapper.registries.BatZapperBlockRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
@@ -79,7 +80,20 @@ public abstract class BatMixin
     {
         Bat bat = (Bat) (Object) this;
 
-        Player nearestPlayer = bat.level().getNearestPlayer(BAT_ZAPPER_TARGETING, bat);
+        TargetingConditions targetingConditions =
+            TargetingConditions.forNonCombat().range(BatZapper.config().getPlayerSearchRange()).selector(
+                livingEntity ->
+                {
+                    if (!(livingEntity instanceof ServerPlayer player))
+                    {
+                        return false;
+                    }
+
+                    return player.getMainHandItem().is(BatZapperBlockRegistry.BAT_ZAPPER.get().asItem()) ||
+                        player.getOffhandItem().is(BatZapperBlockRegistry.BAT_ZAPPER.get().asItem());
+                });
+
+        Player nearestPlayer = bat.level().getNearestPlayer(targetingConditions, bat);
         BlockPos targetPosition = this.batZapper$targetPosition;
 
         if (nearestPlayer != null)
@@ -138,7 +152,7 @@ public abstract class BatMixin
     private BlockPos batZapper$findNearestCage(Bat bat)
     {
         BlockPos batPos = bat.blockPosition();
-        int range = 12;
+        int range = BatZapper.config().getZapperOperationRange();
 
         for (int r = 1; r <= range; r++)
         {
@@ -175,19 +189,4 @@ public abstract class BatMixin
      */
     @Unique
     private BlockPos batZapper$targetPosition = null;
-
-    /**
-     * The targeting logic for player with zapper.
-     */
-    @Unique
-    private final static TargetingConditions BAT_ZAPPER_TARGETING = TargetingConditions.forNonCombat().range(12).selector(
-        (livingEntity) -> {
-            if (!(livingEntity instanceof ServerPlayer player))
-            {
-                return false;
-            }
-
-            return player.getMainHandItem().is(BatZapperBlockRegistry.BAT_ZAPPER.get().asItem()) ||
-                player.getOffhandItem().is(BatZapperBlockRegistry.BAT_ZAPPER.get().asItem());
-        });
 }
