@@ -74,9 +74,10 @@ public class BatZapperBlock extends Block
         Level level,
         BlockPos blockPos,
         Entity entity,
-        InsideBlockEffectApplier insideBlockEffectApplier)
+        InsideBlockEffectApplier insideBlockEffectApplier,
+        boolean probablyFloating)
     {
-        super.entityInside(blockState, level, blockPos, entity, insideBlockEffectApplier);
+        super.entityInside(blockState, level, blockPos, entity, insideBlockEffectApplier, probablyFloating);
 
         if (level instanceof ServerLevel serverLevel && entity instanceof Bat)
         {

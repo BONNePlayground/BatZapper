@@ -16,7 +16,7 @@ import lv.id.bonne.batzapper.blocks.BatLureBlock;
 import lv.id.bonne.batzapper.blocks.BatZapperBlock;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -45,7 +45,7 @@ public class BatZapperBlockRegistry
             new BlockItem(block.get(),
                 new Item.Properties().arch$tab(BatZapperCreativeTabRegistry.BAT_ZAPPER_TAB).
                     setId(ResourceKey.create(Registries.ITEM,
-                        ResourceLocation.fromNamespaceAndPath(BatZapper.MOD_ID, name)))));
+                        Identifier.fromNamespaceAndPath(BatZapper.MOD_ID, name)))));
     }
 
 
@@ -64,7 +64,7 @@ public class BatZapperBlockRegistry
                 noOcclusion().
                 lightLevel(state -> 3).
                 setId(ResourceKey.create(Registries.BLOCK,
-                    ResourceLocation.fromNamespaceAndPath(BatZapper.MOD_ID, "bat_zapper"))))
+                    Identifier.fromNamespaceAndPath(BatZapper.MOD_ID, "bat_zapper"))))
     );
 
 
@@ -77,6 +77,6 @@ public class BatZapperBlockRegistry
                 randomTicks().
                 lightLevel(state -> 1).
                 setId(ResourceKey.create(Registries.BLOCK,
-                    ResourceLocation.fromNamespaceAndPath(BatZapper.MOD_ID, "bat_zapper"))))
+                    Identifier.fromNamespaceAndPath(BatZapper.MOD_ID, "bat_zapper"))))
     );
 }

@@ -8,6 +8,8 @@ import lv.id.bonne.batzapper.BatZapper;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.permissions.PermissionCheck;
+import net.minecraft.server.permissions.Permissions;
 
 
 public class BatZapperCommands
@@ -15,7 +17,7 @@ public class BatZapperCommands
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher)
     {
         LiteralArgumentBuilder<CommandSourceStack> baseLiteral = Commands.literal("bat_zapper").
-            requires(stack -> stack.hasPermission(1));
+            requires(Commands.hasPermission(LEVEL_MODERATORS));
 
         LiteralArgumentBuilder<CommandSourceStack> reload = Commands.literal("reload").
             executes(ctx ->
@@ -37,4 +39,7 @@ public class BatZapperCommands
 
         dispatcher.register(baseLiteral.then(reset).then(reload));
     }
+
+
+    public static final PermissionCheck LEVEL_MODERATORS = new PermissionCheck.Require(Permissions.COMMANDS_ADMIN);
 }
